@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>JS实现轮播图</title>
+		<style>
+		*{
+			margin: 0px;
+			padding: 0px;
+			text-decoration: none;
+		}
+		body{padding: 20px;}
+			#container{
+				width: 600px;
+				height:400px;
+				border:3px #333 solid;
+				overflow: hidden ;   /*把超出#container列表的部分隐藏起来*/
+				position: relative;
+			}
+			#list{
+				width: 4200px;	/*图片的总宽度*/
+				height: 400px;
+				position: absolute;  /*让#list的定位基于#container容器*/
+				z-index: 1;
+			}
+			/*对#list中的图片列表进行设置*/
+			#list img{
+				
+				width: 600px;
+				height: 400px;
+				float:left;		/*先使照片排成一行，之后用JS对其实现左右移动的效果*/
+			}
+			/*对按钮大容器进行设置*/
+			#buttons{
+				position: absolute;  /*让#list的定位基于#container容器*/
+				height: 10px;
+				width: 100px;
+				z-index: 2;
+				bottom:20px;
+				left:250px;
+				
+			}
+			/*对小按钮进行设置*/
+			#buttons span{
+				cursor: pointer;
+				float:left;
+				border:1px solid #fff;
+				width: 10px;
+				height: 10px;
+				border-radius: 50%;
+				color:white;
+				background: #333;
+				margin-right: 5px;
+			}
+			/*当这张图片在被移动到#container容器时，显示当前是第几张图片的的按钮的样式的背景颜色*/
+			#buttons .on{
+				background: orangered;
+			}
+			.arrow{
+				cursor: pointer;
+				display: none;  /*开始时箭头隐藏*/
+				line-height: 39px;
+				text-align: center;
+				font-size: 36px;
+				font-weight: bold;
+				width: 40px;
+				height: 40px;
+				position: absolute;
+				z-index: 2;
+				top:180px;
+				background-color:RGBA(0,0,0,0.3);  /*设置背景的透明度*/
+				color:#fff;
+			}
+			.arrow:hover{
+				background-color:RGBA(0,0,0,.7) ;	/*当鼠标经过箭头时，透明度改变*/
+			}
+			#container:hover .arrow{display: block;}
+			
+			/*设置箭头的位置*/
+			#prev{left:20px;}
+			#next{right: 20px;}
+		</style>
+		<script>
+			//当页面加载完毕才开始获取里面的元素
+			window.onload=function(){
+				//获取元素的id
+				var container=document.getElementById("container");
+				var list=document.getElementById("list");
+				var buttons=document.getElementById("buttons").getElementsByTagName("span");
+				var prev=document.getElementById("prev");
+				var next=document.getElementById("next");
+				var index = 1;     /*点亮小圆点*/
+				/*为连续点击造成图片切换卡顿,将进行代码优化*/
+				var animated=false;   //运行时将其改为true
+				var timer;  //自动播放图片的定时器
+				
+				function showButton(){
+					/*在对应的按钮亮起来之前，先把之前的按钮的黄灯清除*/
+					for( var i=0;i<buttons.length;i++)
+					{
+						if(buttons[i].className=="on"){
+							buttons[i].className=" ";
+							break;
+						}
+					}
+					buttons[index - 1].className="on";
+				}
+				//事件绑定：当鼠标点击箭头，图片轮番
+				//当点击next时，执行等号右边的操作——图片向左移动600px,即一张图片的宽度
+				/*
+				next.onclick = function(){
+					list.style.left = parseInt(list.style.left) - 600 + 'px';
+				
+				}
+				prev.onclick = function(){
+					list.style.left= parseInt(list.style.left) + 600 + 'px';
+				}
+				*/
+				//parseInt  将括号里面的数转换为数字
+				
+				
+				/*图片自动播放函数*/
+				function play(){
+					timer=setInterval(function(){
+						next.click();
+					},3000);
+				}
+				/*每隔3秒钟，则执行一次"next.click()" */
+				
+				//setInterval可被执行多次，而setTimeout只被执行一次
+				function stop(){
+					clearInterval(timer);		/*清除定时器*/
+				}
+				
+				
+				//封装成函数
+				function animate(offset){
+					animated=true;
+					var newLeft = parseInt(list.style.left)+offset;
+					/*动画效果的切换图片*/
+					var time=200;  //位移总时间
+					var interval=10; //位移间隔时间
+					var speed = offset/(time/interval); //每次位移量
+					
+					//执行动画的函数
+					function go(){
+						if ((speed < 0 && parseInt(list.style.left)> newLeft) || (speed > 0 && parseInt(list.style.left) < newLeft) ) //符合这两种情况则执行
+							{
+								list.style.left = parseInt(list.style.left)+speed + 'px';
+							//设置定时器,
+							setTimeout(go,interval);
+							/*多少毫秒“interval”后执行go函数*/
+							}
+					/*超出图片范围，即轮番到附属图片时，则将其归位*/
+					else{
+						//动画执行完毕
+						animated=false;
+						list.style.left=newLeft+"px";
+							/*实现图片列表的 无限循环;当轮番到两张附属图片时，执行下面的语句*/
+							
+						if(newLeft > -600){
+							list.style.left= -3000+"px";
+						}
+						if(newLeft < -3000){
+							list.style.left=-600 +'px';
+						}
+					}
+				}
+				go();  /*调用go函数*/	
+			}
+					
+					
+					
+				
+				prev.onclick = function(){
+					/*实现无限循环*/
+					if(index == 1)  /*当图片移动到第一张图片时，将index值切换到最后一张图片的值*/
+					{
+						index = 5;
+					}else{
+						index -= 1;  /*指向前一个按钮*/
+					}
+					
+					showButton(); 
+					/*判断图片是否切换完毕*/
+					if(animated==false){
+						animate(-600);
+					}
+					
+				}
+				next.onclick =function(){
+					if(index == 5){		/*当图片移动到最后一张图片时，将index值切换到第一张图片的值*/
+						index=1;
+						
+					}else{
+						index += 1;		/*指向向下一个按钮*/
+					}
+				
+					showButton();   /*调用这个函数，显示小黄点*/
+					if(!animated){
+						animate(600);
+					}
+					
+				}
+				
+				/*通过按钮切换图片 */
+				for(var i=0;i<buttons.length;i++){
+					buttons[i].onclick=function(){
+						/*增加if语句进行代码优化，即如果当前点击的是当前显示的图片，则不执行下面 的代码*/
+						if(this.className == 'on'){
+							return ;
+						}
+						var myIndex=parseInt(this.getAttribute('index'));		/*通过getAttribute方法来获取自定义属性index*/
+						var offset = -600 * (myIndex - index);		/*计算当前打开图片与点击图片的差值；实现点击按钮，则跳转至相应的图片*/
+						if(!animated){
+							animate(offset); /*执行切换图片的函数*/
+						}
+						
+						index = myIndex; /*更新当前.on所在的index值*/
+						showButton();   /*显示当前图片对应按钮的样式*/
+						
+					}
+				}
+				
+				
+				/*当鼠标经过的时候图片自动播放效果停止*/
+				container.onmousemove=stop;
+				/*当鼠标离开图片的时候，自动播放图片*/
+				container.onmouseout=play;
+				
+				//设置初始状态
+				play();
+			}
+		</script>
+	</head>
+	<body>
+		<div id="container">
+			<div id="list" style="left:-600px;">    <!--通过控制left值来轮番图片-->
+				<img src="img/5.jpg"/>
+				<img src="img/1.jpeg"/>				
+				<img src="img/2.jpg"/>
+				<img src="img/3.jpg"/>
+				<img src="img/4.jpg"/>
+				<img src="img/5.jpg"/>
+				<img src="img/1.jpeg"/>
+			</div>
+			<div id="buttons">
+				<span index="1" class="on"></span>    <!--这是什么意思？ -->
+				<span index="2" class></span>
+				<span index="3" class></span>
+				<span index="4" class></span>
+				<span index="5" class></span>
+			</div>
+			<a href="javascript:;" id="prev" class="arrow">&lt;</a>
+			<a href="javascript:;" id="next" class="arrow">></a>  <!-- 使用href="javascript:;"  使点击此按钮时切换图片-->
+		</div>
+	</body>
+</html>
